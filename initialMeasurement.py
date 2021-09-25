@@ -106,6 +106,7 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
 
         # print("{:.2f}".format(l_arm)) #rounded 3f == str(l_arm)
         # Visualize sizes
+        # print(l_arm)
         cv2.putText(annotated_image, "{:.3f}".format(l_arm), 
                         tuple(np.multiply(l_elbow, [w, h]).astype(int)), 
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
@@ -121,6 +122,7 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
         cv2.putText(annotated_image, "{:.3f}".format(r_leg), 
                         tuple(np.multiply(r_knee, [w, h]).astype(int)), 
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
+
     except:
         pass
     

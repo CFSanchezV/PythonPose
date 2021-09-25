@@ -34,6 +34,7 @@ img = image_resize(img, height=600)
 
 imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
+'''
 
 #trackbars
 cv2.namedWindow("trackbar")
@@ -48,7 +49,7 @@ cv2.createTrackbar("s max", "trackbar" , 255, 255, empty)
 cv2.createTrackbar("v min", "trackbar" , 0, 255, empty)
 cv2.createTrackbar("v max", "trackbar" , 255, 255, empty)
 
-'''
+
 while True:
     img = image_resize(img, height=600)
     imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -70,7 +71,7 @@ while True:
     cv2.waitKey(1)
 '''  
 
-lower = np.array([0, 45, 0])
+lower = np.array([0, 50, 0])
 upper = np.array([255, 255, 255])
 
 mask = cv2.inRange(imgHSV, lower, upper)

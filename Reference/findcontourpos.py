@@ -5,7 +5,7 @@ import os
 
 dirname = os.path.dirname(__file__)
 
-# Reading image 
+# Reading image
 font = cv2.FONT_HERSHEY_COMPLEX 
 img2 = cv2.imread(os.path.join(dirname, '../input/test.jpg'), cv2.IMREAD_COLOR) 
 
@@ -17,8 +17,7 @@ img = cv2.imread(os.path.join(dirname, '../input/test.jpg'), cv2.IMREAD_GRAYSCAL
 _, threshold = cv2.threshold(img, 110, 255, cv2.THRESH_BINARY) 
 
 # Detecting contours in image. 
-contours, _= cv2.findContours(threshold, cv2.RETR_TREE, 
-                            cv2.CHAIN_APPROX_NONE) 
+contours, _= cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE) 
 
 # Going through every contours found in the image. 
 for cnt in contours:

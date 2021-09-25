@@ -7,57 +7,62 @@ mp_pose = mp.solutions.pose
 mp_holistic = mp.solutions.holistic
 
 dirname = os.path.dirname(__file__)
+font = cv2.FONT_HERSHEY_COMPLEX 
 
+# Simulate receiving countour processed image
+fore_image = cv2.imread(os.path.join(dirname, 'output/justforeground.jpg'), cv2.IMREAD_COLOR) 
+cv2.imshow('Imagen inicial', fore_image)
 
-def calc_waist():
-    pass
+image = cv2.imread(os.path.join(dirname, 'output/justforeground.jpg'), cv2.IMREAD_GRAYSCALE)
 
-# For static images:
-with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5) as pose:
-
-    image = cv2.imread(os.path.join(dirname, 'input/fashion1.jpg'))  #Insert your Image Here
-    image_height, image_width, _  = image.shape
-    # Convert the BGR image to RGB before processing.
-    results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-
-    # Extract landmarks
-    try:
-        landmarks = results.pose_landmarks.landmark
-    except:
-        pass
-
-
-    # Draw pose landmarks on the image.
-    annotated_image = image.copy()
-    mp_drawing.draw_landmarks(annotated_image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
-    cv2.imshow("annotated", annotated_image)
-    
-    cv2.waitKey()
-    if cv2.waitKey(10) & 0xFF == ord('q'): quit()
-    #cv2.imwrite(r'anotada.png', annotated_image)
-
-
-#GET landmarks necessary
-#landmarks positions for needed values: [11 to 16] for arms && [23 to 30] for arms
-l_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
-r_shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
-l_hip = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x,landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
-r_hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
-
+# black and white only image
+_, threshold = cv2.threshold(image, 110, 255, cv2.THRESH_BINARY)
 
 # Get contuor image if white bg
+contours, _= cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+
+# Going through every contour
+for cnt in contours:
+    
+    approx = cv2.approxPolyDP(cnt, 0.009 * cv2.arcLength(cnt, True), True) 
+    print(type(approx))
+    # draws boundary of contours. 
+    cv2.drawContours(image, [approx], -1, (144, 238, 144), 2)
+
+    # Used to flatted the array containing 
+    # the co-ordinates of the vertices.
+    n = approx.ravel()
+    i = 0
+
+    for j in n : 
+        if(i % 2 == 0): 
+            x = n[i] 
+            y = n[i + 1] 
+
+            # String containing the co-ordinates. 
+            string = str(x) + " " + str(y) 
+
+            if(i == 0): 
+                # text on topmost co-ordinate. 
+                cv2.putText(image, "Arrow tip", (x, y), font, 0.5, (0, 255, 0)) 
+            else: 
+                # text on remaining co-ordinates. 
+                cv2.putText(image, string, (x, y), font, 0.5, (0, 255, 0)) 
+        i = i + 1
+
+# Showing the final image. 
+cv2.imshow('Contours', image)
+
+if cv2.waitKey(0) & 0xFF == ord('q'): 
+    cv2.destroyAllWindows()
 
 
+# Find positions for final measurements
+def calculate_Neck():
+    pass
 
+def calculate_Chest():
+    pass
 
-# Get conversion factor
-pixelsPerMetric = None
-
-#example measurements in cm
-chest_circumf = None
-waist_circumf = None
-hip_circumf = None
-
-
-def pixeldensity():
+def calculate_Hip():
     pass
