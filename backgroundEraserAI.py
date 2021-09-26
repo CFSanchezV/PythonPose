@@ -10,6 +10,25 @@ import torchvision.transforms as T
 # Aux
 dirname = os.path.dirname(__file__)
 
+def image_resize(image, width = None, height = None, inter = cv2.INTER_AREA):
+    dim = None
+    (h, w) = image.shape[:2]
+    if width is None and height is None:
+        return image
+
+    # calcs ratios
+    if width is None:
+        r = height / float(h)
+        dim = (int(w * r), height)
+
+    else:
+        r = width / float(w)
+        dim = (width, int(h * r))
+
+    resized = cv2.resize(image, dim, interpolation = inter)
+    return resized
+
+
 def write_image(path, img):
     img = cv2.convertScaleAbs(img, alpha=(255.0))
     cv2.imwrite(path, img)
@@ -86,8 +105,8 @@ def decode_segmap(image, source, nc=21):
 def segment(net, path, dev='cpu'):
     img = Image.open(path)
 
-    # Comment the Resize and CenterCrop for better inference results
-    trf = T.Compose([# T.Resize(450),
+    # Comment Resize and CenterCrop for better inference results
+    trf = T.Compose([T.Resize(450),
                      # T.CenterCrop(224),
                      T.ToTensor(),
                      T.Normalize(mean=[0.485, 0.456, 0.406],
@@ -98,6 +117,9 @@ def segment(net, path, dev='cpu'):
 
     om = torch.argmax(out.squeeze(), dim=0).detach().cpu().numpy()
     rgb = decode_segmap(om, path)
+
+    w, h = img.size[:]
+    rgb = image_resize(rgb, width=w, height=h)
     
     cv2.imshow('Sin fondo', rgb)
     write_image(os.path.join(dirname, 'filtered_images/result.jpg'), rgb)
@@ -107,7 +129,7 @@ def segment(net, path, dev='cpu'):
 
 
 # dlab = models.segmentation.deeplabv3_resnet101(pretrained=True).eval()
-fcn = models.segmentation.fcn_resnet101(pretrained=True).eval()
+fcnn = models.segmentation.fcn_resnet101(pretrained=True).eval()
 
 # segment(dlab, os.path.join(dirname, 'images/man-empty-room.jpg'), dev='cpu')
-segment(fcn, os.path.join(dirname, 'images/front1.jpg'), dev='cpu')
+segment(fcnn, os.path.join(dirname, 'images/front1.jpg'), dev='cpu')

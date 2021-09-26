@@ -3,13 +3,13 @@ import cv2
 import os
 
 dirname = os.path.dirname(__file__)
-font = cv2.FONT_HERSHEY_COMPLEX 
 
 # Read image
-img_in = cv2.imread(os.path.join(dirname, "output/filtered.jpg"))
+img_in = cv2.imread(os.path.join(dirname, "filtered_images/result.jpg"))
 img_in = cv2.cvtColor(img_in, cv2.COLOR_BGR2GRAY)
 
-cv2.imshow("Input img", img_in)
+# Show B&W image
+# cv2.imshow("Input img", img_in)
  
 # Threshold. Set values equal to or above 220 to 0. Set values below 220 to 255.
 th, img_thres = cv2.threshold(img_in, 245, 255, cv2.THRESH_BINARY_INV)
@@ -34,7 +34,7 @@ img_out = img_thres | im_floodfill_inv
 # im_out is of shape (w, h, _)
 
 # Simulate receiving countour processed image 
-cv2.imshow('Imagen inicial 2', img_out)
+# cv2.imshow('floodFilledImg', img_out)
 
 # get a blank canvas for drawing contour on and convert img to grayscale
 img_in = cv2.cvtColor(img_in, cv2.COLOR_GRAY2BGR)
@@ -60,6 +60,8 @@ approx = cv2.approxPolyDP(cnt, epsilon, True)
 
 hull = cv2.convexHull(cnt)
 
+# canvas = cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB)
+
 # draw all points
 cv2.drawContours(canvas, cnt, -1, (0, 255, 0), 2)
 # draw some points by approxpolyDP
@@ -67,7 +69,8 @@ cv2.drawContours(canvas, [approx], -1, (0, 0, 255), 2)
 
 # cv2.drawContours(canvas, [hull], -1, (0, 0, 255), 3) # simple hull
 
-cv2.imshow("Contour", canvas)
+cv2.imshow("Contours", canvas)
+# cv2.imwrite(os.path.join(dirname, 'filtered_images/resultPt2.jpg'), canvas)
 
 if cv2.waitKey(0) & 0xFF == ord('q'): 
     cv2.destroyAllWindows()
