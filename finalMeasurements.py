@@ -24,8 +24,7 @@ contours, _= cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 # Going through every contour
 for cnt in contours:
     
-    approx = cv2.approxPolyDP(cnt, 0.009 * cv2.arcLength(cnt, True), True) 
-    print(type(approx))
+    approx = cv2.approxPolyDP(cnt, 0.009 * cv2.arcLength(cnt, True), True)
     # draws boundary of contours. 
     cv2.drawContours(image, [approx], -1, (144, 238, 144), 2)
 
