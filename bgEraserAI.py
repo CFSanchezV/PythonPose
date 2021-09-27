@@ -129,10 +129,10 @@ fcnn = models.segmentation.fcn_resnet101(pretrained=True).eval()
 
 # segment(dlab, os.path.join(dirname, 'images/front1.jpg'), dev='cpu')
 
-output_img = segment(fcnn, os.path.join(dirname, 'images/front1.jpg'), dev='cpu')
+output_img = segment(fcnn, os.path.join(dirname, 'images/side1.jpg'), dev='cpu')
 
 cv2.imshow('Sin fondo', output_img)
-write_image(os.path.join(dirname, 'filtered_images/result_front.jpg'), output_img)
+write_image(os.path.join(dirname, 'filtered_images/result_side.jpg'), output_img)
 
 if cv2.waitKey(0) & 0xFF == ord('q'):
     cv2.destroyAllWindows()

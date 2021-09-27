@@ -77,7 +77,7 @@ contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_N
 cnt = contours[-1]
 
 # define main contour approx. and hull
-perimeter = cv2.arcLength(cnt, True)
+# perimeter = cv2.arcLength(cnt, True)
 epsilon = 0.01*cv2.arcLength(cnt, True)
 approx = cv2.approxPolyDP(cnt, epsilon, True)
 
@@ -93,7 +93,7 @@ cv2.drawContours(canvas, cnt, -1, (0, 255, 0), 2)
 
 # cv2.drawContours(canvas, [hull], -1, (0, 0, 255), 3) # simple hull
 
-
+# Additional measurements after capturing contours
 neckY = 179
 hipY = 392
 
@@ -107,19 +107,22 @@ def get_points(contour, Ypoint):
     lst = list(set(xs))
     return lst
 
-neckPts = get_points(cnt, neckY)
-hipPts = get_points(cnt, hipY)
-
 def show2points(lst):
     cv2.circle(canvas, (lst[0][0], lst[0][1]), 4, (255,0,0), 2, cv2.LINE_AA)
     cv2.circle(canvas, (lst[-1][0], lst[-1][1]), 4, (255,0,0), 2, cv2.LINE_AA)
 
+
+neckPts = get_points(cnt, neckY)
+hipPts = get_points(cnt, hipY)
+
+
 show2points(hipPts)
 show2points(neckPts)
 
+topL1, topL2= (0,15), (0,30)
 
 cv2.imshow("Contours", canvas)
-cv2.imwrite(os.path.join(dirname, 'filtered_images/resultPt2.jpg'), canvas)
+cv2.imwrite(os.path.join(dirname, 'filtered_images/result_frontPt2.jpg'), canvas)
 
 if cv2.waitKey(0) & 0xFF == ord('q'): 
     cv2.destroyAllWindows()
