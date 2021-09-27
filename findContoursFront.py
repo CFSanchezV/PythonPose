@@ -93,11 +93,11 @@ cv2.drawContours(canvas, cnt, -1, (0, 255, 0), 2)
 
 # cv2.drawContours(canvas, [hull], -1, (0, 0, 255), 3) # simple hull
 
-# Additional measurements after capturing contours
-neckY = 179
-hipY = 392
+# MEASUREMENTS AFTER CONTOURS
+neckY = 177
+hipY = 406
 
-def get_points(contour, Ypoint):
+def get_Xpts(contour, Ypoint):
     xs = []
     for point in contour:
         x, y = point[0][:]
@@ -108,12 +108,13 @@ def get_points(contour, Ypoint):
     return lst
 
 def show2points(lst):
-    cv2.circle(canvas, (lst[0][0], lst[0][1]), 4, (255,0,0), 2, cv2.LINE_AA)
-    cv2.circle(canvas, (lst[-1][0], lst[-1][1]), 4, (255,0,0), 2, cv2.LINE_AA)
+    first, last = lst[0], lst[-1]
+    cv2.circle(canvas, (first[0], first[1]), 4, (255,0,0), 2, cv2.LINE_AA)
+    cv2.circle(canvas, (last[0], last[1]), 4, (255,0,0), 2, cv2.LINE_AA)
 
 
-neckPts = get_points(cnt, neckY)
-hipPts = get_points(cnt, hipY)
+neckPts = get_Xpts(cnt, neckY)
+hipPts = get_Xpts(cnt, hipY)
 
 
 show2points(hipPts)

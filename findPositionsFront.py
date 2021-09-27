@@ -70,17 +70,18 @@ def find_ChestY(a, b, w, h, img):
     return p[1]
 
 
-def calculate_Chest(lel, lsh, rsh, w, h, img):
+def calculate_Chest(lel, lsh, rel, rsh, w, h, img):
     a = np.array(lsh) # l should
     b = np.array(rsh) # r should
 
     ls = np.multiply(a, [w, h]).astype(int) # l should
     rs = np.multiply(b, [w, h]).astype(int) # r should
 
-    Y = find_ChestY(lel, lsh, w, h, img)
+    LY = find_ChestY(lel, lsh, w, h, img)
+    RY = find_ChestY(rel, rsh, w, h, img)
 
-    ls[1] = Y
-    rs[1] = Y
+    ls[1] = LY
+    rs[1] = RY
 
     cv2.circle(img, ls, 5, BLACK, 2)
     cv2.circle(img, rs, 5, BLACK, 2)
@@ -138,10 +139,15 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
     img_front = image_resize(img_front, height=730)
     h, w, _  = img_front.shape
     
-    results = pose.process(cv2.cvtColor(img_front, cv2.COLOR_BGR2RGB))
+    # Recolor image to RGB
+    img_front = cv2.cvtColor(img_front, cv2.COLOR_BGR2RGB)
+
+    results = pose.process(img_front)
+    
+    # Recolor back to BGR
+    img_front = cv2.cvtColor(img_front, cv2.COLOR_RGB2BGR)
 
     annotated_front = img_front.copy()
-    results = pose.process(img_front)
     
     # GET LANDMARKS
     landmarks = results.pose_landmarks.landmark
@@ -166,7 +172,7 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
     # Find positions
     topL1, topL2, topL3, topL4 = (0,15), (0,30), (0,45), (0,60)
     neckY = find_NeckY(nose, l_shoulder, w, h, annotated_front)
-    chest_dist_front = calculate_Chest(l_elbow, l_shoulder, r_shoulder, w, h, annotated_front)
+    chest_dist_front = calculate_Chest(l_elbow, l_shoulder, r_elbow, r_shoulder, w, h, annotated_front)
     waist_dist_front = calculate_Waist(l_shoulder, r_shoulder, l_hip, r_hip,  w, h, annotated_front)
     hipY = find_HipY(l_hip, w, h, annotated_front)
 
