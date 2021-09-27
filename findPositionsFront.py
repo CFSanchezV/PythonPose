@@ -11,7 +11,9 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
 
-def calculate_Perimeter(a, b):
+def calculate_Perimeter(profundidad, ancho):
+    a, b = profundidad, ancho
+
     perimeter = math.pi * ( 3*(a + b) - math.sqrt( (3*a + b) * (a + 3*b) ))
     return perimeter
 
@@ -122,6 +124,34 @@ def calculate_Waist(la, ra, lb, rb,  w, h, img):
     return dist
 
 
+def find_WaistY(la, ra, lb, rb,  w, h, img):
+    a = np.array(la) # l should
+    b = np.array(ra) # r should
+    c = np.array(lb) # l hip
+    d = np.array(rb) # r hip
+
+    ls = np.multiply(a, [w, h]).astype(int) # l should
+    rs = np.multiply(b, [w, h]).astype(int) # r should
+    lh = np.multiply(c, [w, h]).astype(int) # l hip
+    rh = np.multiply(d, [w, h]).astype(int) # r hip
+
+    lw = np.copy(ls)
+    lw[0] = (abs(ls[0] - lh[0])) /2 + lh[0]
+    lw[1] = (abs(lh[1] - ls[1])) /2 + ls[1]
+
+    rw = np.copy(rs)
+    rw[0] = (abs(rh[0] - rs[0])) /2 + rs[0]
+    rw[1] = (abs(rh[1] - rs[1])) /2 + rs[1]
+
+    cv2.circle(img, lw, 5, BLACK, 2)
+    cv2.circle(img, rw, 5, BLACK, 2)
+
+    # dist = np.linalg.norm(lw - rw)
+    # cv2.line(img, rw, lw, BLACK, 2, cv2.LINE_AA)
+
+    return lw[1], rw[1]
+
+
 def find_HipY(a, w, h, img):
     ar = np.array(a) # First
     a2 = np.multiply(ar, [w, h]).astype(int)
@@ -142,6 +172,7 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
     # Recolor image to RGB
     img_front = cv2.cvtColor(img_front, cv2.COLOR_BGR2RGB)
 
+    # Make detections
     results = pose.process(img_front)
     
     # Recolor back to BGR
@@ -173,7 +204,7 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
     topL1, topL2, topL3, topL4 = (0,15), (0,30), (0,45), (0,60)
     neckY = find_NeckY(nose, l_shoulder, w, h, annotated_front)
     chest_dist_front = calculate_Chest(l_elbow, l_shoulder, r_elbow, r_shoulder, w, h, annotated_front)
-    waist_dist_front = calculate_Waist(l_shoulder, r_shoulder, l_hip, r_hip,  w, h, annotated_front)
+    LwaistY, RwaistY = find_WaistY(l_shoulder, r_shoulder, l_hip, r_hip,  w, h, annotated_front)
     hipY = find_HipY(l_hip, w, h, annotated_front)
 
     # Visualize y_positions, additional points
@@ -183,7 +214,7 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
     cv2.putText(annotated_front, "chest front: {:.3f}".format(chest_dist_front), topL2, 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
 
-    cv2.putText(annotated_front, "waist front: {:.3f}".format(waist_dist_front), topL3, 
+    cv2.putText(annotated_front, "waist(left, right): {:.3f}, {:.3f}".format(LwaistY, RwaistY), topL3, 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
 
     cv2.putText(annotated_front, "hip(_,y): {:.3f}".format(hipY), topL4, 

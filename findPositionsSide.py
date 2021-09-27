@@ -125,6 +125,7 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
     # Recolor image to RGB
     img_side = cv2.cvtColor(img_side, cv2.COLOR_BGR2RGB)
 
+    # Make detections
     results = pose.process(img_side)
     
     # Recolor back to BGR
@@ -161,16 +162,16 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
     hipY = find_HipY(l_hip, w, h, annotated_side)
 
     # Visualize y_positions, additional points
-    cv2.putText(annotated_side, "neck(y1,y2): {:.3f},{:.3f}".format(LneckY, RneckY), topL1, 
+    cv2.putText(annotated_side, "neck(left, right): {:.3f},{:.3f}".format(LneckY, RneckY), topL1, 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
     
-    cv2.putText(annotated_side, "chest(_,y): {:.3f}".format(chestY), topL2, 
+    cv2.putText(annotated_side, "chest(_, y): {:.3f}".format(chestY), topL2, 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
 
-    cv2.putText(annotated_side, "waist(_,y): {:.3f}".format(waistY), topL3, 
+    cv2.putText(annotated_side, "waist(_, y): {:.3f}".format(waistY), topL3, 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
 
-    cv2.putText(annotated_side, "hip(_,y): {:.3f}".format(hipY), topL4, 
+    cv2.putText(annotated_side, "hip(_, y): {:.3f}".format(hipY), topL4, 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
  
     

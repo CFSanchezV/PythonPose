@@ -93,9 +93,11 @@ cv2.drawContours(canvas, cnt, -1, (0, 255, 0), 2)
 
 # cv2.drawContours(canvas, [hull], -1, (0, 0, 255), 3) # simple hull
 
-# MEASUREMENTS AFTER CONTOURS
+
+# MEASUREMENTS AFTER CONTOURS ### NECK, WAIST, HIP
 neckY = 177
-hipY = 406
+LwaistY, RwaistY = 306, 301
+hipY = 396
 
 def get_Xpts(contour, Ypoint):
     xs = []
@@ -105,6 +107,7 @@ def get_Xpts(contour, Ypoint):
             xs.append( (x, y) )
 
     lst = list(set(xs))
+    lst.sort()
     return lst
 
 def show2points(lst):
@@ -112,15 +115,28 @@ def show2points(lst):
     cv2.circle(canvas, (first[0], first[1]), 4, (255,0,0), 2, cv2.LINE_AA)
     cv2.circle(canvas, (last[0], last[1]), 4, (255,0,0), 2, cv2.LINE_AA)
 
+def showWaistpoints(LwaistPts, RwaistPts):
+    middleX = w//2
+    for pnt in LwaistPts:
+        pass
+
+    l1 = LwaistPts[0]
+    r2 = RwaistPts[-1]
+    cv2.circle(canvas, (l1[0], l1[1]), 4, (255,0,0), 2, cv2.LINE_AA)
+    cv2.circle(canvas, (r2[0], r2[1]), 4, (255,0,0), 2, cv2.LINE_AA)
 
 neckPts = get_Xpts(cnt, neckY)
+LwaistPts = get_Xpts(cnt, LwaistY)
+RwaistPts = get_Xpts(cnt, RwaistY)
 hipPts = get_Xpts(cnt, hipY)
 
+print(LwaistPts)
+print(RwaistPts)
 
-show2points(hipPts)
 show2points(neckPts)
+showWaistpoints(LwaistPts, RwaistPts)
+show2points(hipPts)
 
-topL1, topL2= (0,15), (0,30)
 
 cv2.imshow("Contours", canvas)
 cv2.imwrite(os.path.join(dirname, 'filtered_images/result_frontPt2.jpg'), canvas)

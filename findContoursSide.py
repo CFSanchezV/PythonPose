@@ -93,9 +93,11 @@ cv2.drawContours(canvas, cnt, -1, (0, 255, 0), 2)
 
 # cv2.drawContours(canvas, [hull], -1, (0, 0, 255), 3) # simple hull
 
-# MEASUREMENTS AFTER CONTOURS
-neckY = 146
-chestY = 242
+
+# MEASUREMENTS AFTER CONTOURS ### NECK, CHEST, WAIST, HIP
+LneckY, RneckY = 146, 163
+chestY = 245
+waistY = 295
 hipY = 406
 
 def get_Xpts(contour, Ypoint):
@@ -106,6 +108,7 @@ def get_Xpts(contour, Ypoint):
             xs.append( (x, y) )
 
     lst = list(set(xs))
+    lst.sort()
     return lst
 
 def show2points(lst):
@@ -114,14 +117,23 @@ def show2points(lst):
     cv2.circle(canvas, (last[0], last[1]), 4, (255,0,0), 2, cv2.LINE_AA)
 
 
-neckPts = get_Xpts(cnt, neckY)
+def showNeckpoints(LNeckPts, RNeckPts):
+    l1 = LNeckPts[0]
+    r2 = RNeckPts[-1]
+    cv2.circle(canvas, (l1[0], l1[1]), 4, (255,0,0), 2, cv2.LINE_AA)
+    cv2.circle(canvas, (r2[0], r2[1]), 4, (255,0,0), 2, cv2.LINE_AA)
+
+
+LneckPts = get_Xpts(cnt, LneckY)
+RneckPts = get_Xpts(cnt, RneckY)
+chestPts = get_Xpts(cnt, chestY)
+waistPts = get_Xpts(cnt, waistY)
 hipPts = get_Xpts(cnt, hipY)
 
-
+showNeckpoints(LneckPts, RneckPts)
+show2points(chestPts)
+show2points(waistPts)
 show2points(hipPts)
-show2points(neckPts)
-
-topL1, topL2= (0,15), (0,30)
 
 cv2.imshow("Contours", canvas)
 cv2.imwrite(os.path.join(dirname, 'filtered_images/result_sidePt2.jpg'), canvas)
