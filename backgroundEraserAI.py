@@ -118,18 +118,21 @@ def segment(net, path, dev='cpu'):
     om = torch.argmax(out.squeeze(), dim=0).detach().cpu().numpy()
     rgb = decode_segmap(om, path)
 
+    # Resize back to orig
     w, h = img.size[:]
     rgb = image_resize(rgb, width=w, height=h)
-    
-    cv2.imshow('Sin fondo', rgb)
-    write_image(os.path.join(dirname, 'filtered_images/result.jpg'), rgb)
-
-    if cv2.waitKey(0) & 0xFF == ord('q'):
-        cv2.destroyAllWindows()
+    return rgb
 
 
 # dlab = models.segmentation.deeplabv3_resnet101(pretrained=True).eval()
 fcnn = models.segmentation.fcn_resnet101(pretrained=True).eval()
 
-# segment(dlab, os.path.join(dirname, 'images/man-empty-room.jpg'), dev='cpu')
-segment(fcnn, os.path.join(dirname, 'images/front1.jpg'), dev='cpu')
+# segment(dlab, os.path.join(dirname, 'images/front1.jpg'), dev='cpu')
+
+output_img = segment(fcnn, os.path.join(dirname, 'images/front1.jpg'), dev='cpu')
+
+cv2.imshow('Sin fondo', output_img)
+write_image(os.path.join(dirname, 'filtered_images/result_front.jpg'), output_img)
+
+if cv2.waitKey(0) & 0xFF == ord('q'):
+    cv2.destroyAllWindows()

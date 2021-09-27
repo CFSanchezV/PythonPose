@@ -1,12 +1,36 @@
 import numpy as np
 import cv2
 import os
+import math
 
 dirname = os.path.dirname(__file__)
 
+def image_resize(image, width = None, height = None, inter = cv2.INTER_AREA):
+    dim = None
+    (h, w) = image.shape[:2]
+
+    if width is None and height is None:
+        return image
+
+    # calcs ratios
+    if width is None:
+        r = height / float(h)
+        dim = (int(w * r), height)
+
+    else:
+        r = width / float(w)
+        dim = (width, int(h * r))
+
+    resized = cv2.resize(image, dim, interpolation = inter)
+    return resized
+
+
 # Read image
-img_in = cv2.imread(os.path.join(dirname, "filtered_images/result.jpg"))
+img_in = cv2.imread(os.path.join(dirname, "filtered_images/result_front.jpg"))
 img_in = cv2.cvtColor(img_in, cv2.COLOR_BGR2GRAY)
+
+img_in = image_resize(img_in, height=730)
+h, w  = img_in.shape
 
 # Show B&W image
 # cv2.imshow("Input img", img_in)
@@ -37,8 +61,8 @@ img_out = img_thres | im_floodfill_inv
 # cv2.imshow('floodFilledImg', img_out)
 
 # get a blank canvas for drawing contour on and convert img to grayscale
-img_in = cv2.cvtColor(img_in, cv2.COLOR_GRAY2BGR)
-canvas = np.zeros(img_in.shape, np.uint8)
+original = cv2.cvtColor(img_in, cv2.COLOR_GRAY2BGR)
+canvas = np.zeros(original.shape, np.uint8)
 img2gray = img_out.copy()
 
 ## blurring with kernel 25 ##
@@ -51,7 +75,6 @@ contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_N
 
 # find the main contour (2nd biggest area)
 cnt = contours[-1]
-print(len(cnt))
 
 # define main contour approx. and hull
 perimeter = cv2.arcLength(cnt, True)
@@ -64,13 +87,39 @@ hull = cv2.convexHull(cnt)
 
 # draw all points
 cv2.drawContours(canvas, cnt, -1, (0, 255, 0), 2)
-# draw some points by approxpolyDP
-cv2.drawContours(canvas, [approx], -1, (0, 0, 255), 2)
+
+# draw approx, only some points using approxpolyDP
+# cv2.drawContours(canvas, [approx], -1, (0, 0, 255), 2)
 
 # cv2.drawContours(canvas, [hull], -1, (0, 0, 255), 3) # simple hull
 
+
+neckY = 179
+hipY = 392
+
+def get_points(contour, Ypoint):
+    xs = []
+    for point in contour:
+        x, y = point[0][:]
+        if y == Ypoint:
+            xs.append( (x, y) )
+
+    lst = list(set(xs))
+    return lst
+
+neckPts = get_points(cnt, neckY)
+hipPts = get_points(cnt, hipY)
+
+def show2points(lst):
+    cv2.circle(canvas, (lst[0][0], lst[0][1]), 4, (255,0,0), 2, cv2.LINE_AA)
+    cv2.circle(canvas, (lst[-1][0], lst[-1][1]), 4, (255,0,0), 2, cv2.LINE_AA)
+
+show2points(hipPts)
+show2points(neckPts)
+
+
 cv2.imshow("Contours", canvas)
-# cv2.imwrite(os.path.join(dirname, 'filtered_images/resultPt2.jpg'), canvas)
+cv2.imwrite(os.path.join(dirname, 'filtered_images/resultPt2.jpg'), canvas)
 
 if cv2.waitKey(0) & 0xFF == ord('q'): 
     cv2.destroyAllWindows()
