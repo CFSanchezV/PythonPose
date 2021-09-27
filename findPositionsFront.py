@@ -38,6 +38,15 @@ def image_resize(image, width = None, height = None, inter = cv2.INTER_AREA):
     return resized
 
 
+def find_FootY(la, w, h, img):
+    a = np.array(la) # l heel
+    lh = np.multiply(a, [w, h]).astype(int)
+
+    # cv2.circle(img, (w//2, lh[1]), 5, BLACK, 2)
+
+    return lh[1]
+
+
 def find_NeckY(a, b, w, h, img):
     a = np.array(a) # nose
     b = np.array(b) # should
@@ -50,7 +59,7 @@ def find_NeckY(a, b, w, h, img):
     y2 = (ydiff)/2
     p[1] = b2[1] - y2
 
-    # cv2.circle(img, (230, p[1]), 5, BLACK, 2)
+    # cv2.circle(img, (w//2, p[1]), 5, BLACK, 2)
 
     return p[1]
 
@@ -67,7 +76,7 @@ def find_ChestY(a, b, w, h, img):
     y2 = (ydiff)/2
     p[1] = b2[1] + y2
 
-    # cv2.circle(img, (230, p[1]), 5, BLACK, 2)
+    # cv2.circle(img, (w//2, p[1]), 5, BLACK, 2)
 
     return p[1]
 
@@ -114,12 +123,12 @@ def calculate_Waist(la, ra, lb, rb,  w, h, img):
     rw[0] = (abs(rh[0] - rs[0])) /2 + rs[0]
     rw[1] = (abs(rh[1] - rs[1])) /2 + rs[1]
 
-    cv2.circle(img, lw, 5, BLACK, 2)
-    cv2.circle(img, rw, 5, BLACK, 2)
+    # cv2.circle(img, lw, 5, BLACK, 2)
+    # cv2.circle(img, rw, 5, BLACK, 2)
 
     dist = np.linalg.norm(lw - rw)
 
-    cv2.line(img, rw, lw, BLACK, 2, cv2.LINE_AA)
+    # cv2.line(img, rw, lw, BLACK, 2, cv2.LINE_AA)
 
     return dist
 
@@ -156,7 +165,7 @@ def find_HipY(a, w, h, img):
     ar = np.array(a) # First
     a2 = np.multiply(ar, [w, h]).astype(int)
 
-    # cv2.circle(img, (230, a2[1]), 5, BLACK, 2)
+    # cv2.circle(img, (w//2, a2[1]), 5, BLACK, 2)
 
     return a2[1]
 
@@ -201,11 +210,12 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
     nose = [landmarks[mp_pose.PoseLandmark.NOSE.value].x,landmarks[mp_pose.PoseLandmark.NOSE.value].y]
 
     # Find positions
-    topL1, topL2, topL3, topL4 = (0,15), (0,30), (0,45), (0,60)
+    topL1, topL2, topL3, topL4, topL5 = (0,15), (0,30), (0,45), (0,60), (0,75)
     neckY = find_NeckY(nose, l_shoulder, w, h, annotated_front)
     chest_dist_front = calculate_Chest(l_elbow, l_shoulder, r_elbow, r_shoulder, w, h, annotated_front)
     LwaistY, RwaistY = find_WaistY(l_shoulder, r_shoulder, l_hip, r_hip,  w, h, annotated_front)
     hipY = find_HipY(l_hip, w, h, annotated_front)
+    footY = find_FootY(l_heel, w, h, annotated_front)
 
     # Visualize y_positions, additional points
     cv2.putText(annotated_front, "neck(_,y): {:.3f}".format(neckY), topL1, 
@@ -218,6 +228,9 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
 
     cv2.putText(annotated_front, "hip(_,y): {:.3f}".format(hipY), topL4, 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
+
+    cv2.putText(annotated_front, "foot(_,y): {:.3f}".format(footY), topL5, 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
  
     

@@ -94,10 +94,11 @@ cv2.drawContours(canvas, cnt, -1, (0, 255, 0), 2)
 # cv2.drawContours(canvas, [hull], -1, (0, 0, 255), 3) # simple hull
 
 
-# MEASUREMENTS AFTER CONTOURS ### NECK, WAIST, HIP
+# MEASUREMENTS AFTER CONTOURS ### NECK, WAIST, HIP and HEIGHT
 neckY = 177
 LwaistY, RwaistY = 306, 301
 hipY = 396
+footY = 647
 
 def get_Xpts(contour, Ypoint):
     xs = []
@@ -125,14 +126,54 @@ def showWaistpoints(LwaistPts, RwaistPts):
     cv2.circle(canvas, (l1[0], l1[1]), 4, (255,0,0), 2, cv2.LINE_AA)
     cv2.circle(canvas, (r2[0], r2[1]), 4, (255,0,0), 2, cv2.LINE_AA)
 
+
+# Height calc
+def get_TopY(contour, Xpoint):
+    ys = []
+    for point in contour:
+        x, y = point[0][:]
+        if x == Xpoint:
+            ys.append( (x, y) )
+
+    lst = list(set(ys))
+    lst.sort()
+    y = lst[0][1]
+
+    return [Xpoint, y]
+
+
+def calculate_Height(contour):
+    midX = w//2
+    bottomPoint = [midX, footY]
+    topPoint = get_TopY(contour, midX)
+
+    a = np.array(bottomPoint) # p1
+    b = np.array(topPoint) # p2
+
+    cv2.circle(canvas, a, 5, (255,0,0), 2)
+    cv2.circle(canvas, b, 5, (255,0,0), 2)
+
+    dist = np.linalg.norm(a - b)
+
+    cv2.line(canvas, a, b, (255,0,0), 2, cv2.LINE_AA)
+
+    return dist
+
+
+person_height = int(calculate_Height(cnt))
+print(person_height)
+
+
 neckPts = get_Xpts(cnt, neckY)
 LwaistPts = get_Xpts(cnt, LwaistY)
 RwaistPts = get_Xpts(cnt, RwaistY)
 hipPts = get_Xpts(cnt, hipY)
 
+
 print(LwaistPts)
 print(RwaistPts)
 
+# DRAW POINTS
 show2points(neckPts)
 showWaistpoints(LwaistPts, RwaistPts)
 show2points(hipPts)
