@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
 import os
-import math
 
 dirname = os.path.dirname(__file__)
 
@@ -77,7 +76,7 @@ contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_N
 cnt = contours[-1]
 
 # define main contour approx. and hull
-# perimeter = cv2.arcLength(cnt, True)
+# perim = cv2.arcLength(cnt, True)
 epsilon = 0.01*cv2.arcLength(cnt, True)
 approx = cv2.approxPolyDP(cnt, epsilon, True)
 
@@ -111,23 +110,44 @@ def get_Xpts(contour, Ypoint):
     lst.sort()
     return lst
 
-def show2points(lst):
+def get2Points(lst):
     first, last = lst[0], lst[-1]
     cv2.circle(canvas, (first[0], first[1]), 4, (255,0,0), 2, cv2.LINE_AA)
     cv2.circle(canvas, (last[0], last[1]), 4, (255,0,0), 2, cv2.LINE_AA)
 
-def showWaistpoints(LwaistPts, RwaistPts):
-    middleX = w//2
+    first, last = [first[0], first[1]] , [last[0], last[1]]
+    return first, last
+
+def getWaistPoints(LwaistPts, RwaistPts):
+    mid = w//2 # mid
+    minLDist = w # max length
+    minRDist = w # max length
+    Lpoint, Rpoint = (0, 0), (0,0)
+
     for pnt in LwaistPts:
-        pass
+        x, y = pnt[:] # point
+        if x > mid: continue
+        dist = abs(mid - x)
+        if dist < minLDist:
+            minLDist = dist
+            Lpoint = (x, y)
 
-    l1 = LwaistPts[0]
-    r2 = RwaistPts[-1]
-    cv2.circle(canvas, (l1[0], l1[1]), 4, (255,0,0), 2, cv2.LINE_AA)
-    cv2.circle(canvas, (r2[0], r2[1]), 4, (255,0,0), 2, cv2.LINE_AA)
+    for pnt in RwaistPts:
+        x, y = pnt[:] # point
+        if x < mid: continue
+        dist = abs(mid - x)
+        if dist < minRDist:
+            minRDist = dist
+            Rpoint = (x, y)
+    
+    cv2.circle(canvas, Rpoint, 4, (255,0,0), 2, cv2.LINE_AA)
+    cv2.circle(canvas, Lpoint, 4, (255,0,0), 2, cv2.LINE_AA)
+
+    waistPt1, waistPt2 = [Rpoint[0], Rpoint[1]] , [Lpoint[0], Lpoint[1]]
+    return waistPt1, waistPt2
 
 
-# Height calc
+### Height calc ###
 def get_TopY(contour, Xpoint):
     ys = []
     for point in contour:
@@ -141,7 +161,6 @@ def get_TopY(contour, Xpoint):
 
     return [Xpoint, y]
 
-
 def calculate_Height(contour):
     midX = w//2
     bottomPoint = [midX, footY]
@@ -154,29 +173,59 @@ def calculate_Height(contour):
     cv2.circle(canvas, b, 5, (255,0,0), 2)
 
     dist = np.linalg.norm(a - b)
-
-    cv2.line(canvas, a, b, (255,0,0), 2, cv2.LINE_AA)
+    # cv2.line(canvas, a, b, (255,0,0), 2, cv2.LINE_AA)
 
     return dist
 
 
 person_height = int(calculate_Height(cnt))
-print(person_height)
 
 
+### misc calcs ###
 neckPts = get_Xpts(cnt, neckY)
-LwaistPts = get_Xpts(cnt, LwaistY)
-RwaistPts = get_Xpts(cnt, RwaistY)
 hipPts = get_Xpts(cnt, hipY)
 
+LwaistPts = get_Xpts(cnt, LwaistY)
+RwaistPts = get_Xpts(cnt, RwaistY)
 
-print(LwaistPts)
-print(RwaistPts)
 
 # DRAW POINTS
-show2points(neckPts)
-showWaistpoints(LwaistPts, RwaistPts)
-show2points(hipPts)
+FneckPt1, FneckPt2 = get2Points(neckPts)
+FwaistPt1, FwaistPt2 = getWaistPoints(LwaistPts, RwaistPts)
+FhipPt1, FhipPt2 = get2Points(hipPts)
+
+
+
+### CALCULATE SIZES ###
+def calculate_Distance(pt1, pt2):
+    '''makes numpy [x y] arrays from [x,y] lists to calc dist'''
+    a = np.array(pt1) # p1
+    b = np.array(pt2) # p2
+
+    dist = np.linalg.norm(a - b)
+
+    return dist
+
+
+### SHOW FRONT RESULTS ###
+distNeck = calculate_Distance(FneckPt1, FneckPt2)
+distWaist = calculate_Distance(FwaistPt1, FwaistPt2)
+distHip = calculate_Distance(FhipPt1, FhipPt2)
+
+
+topL1, topL2, topL3, topL4 = (0,15), (0,30), (0,45), (0,60)
+cv2.putText(canvas, "neck: {:.2f}".format(distNeck), topL1, 
+    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+cv2.putText(canvas, "waist: {:.2f}".format(distWaist), topL2, 
+    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+cv2.putText(canvas, "hip: {:.2f}".format(distHip), topL3, 
+    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+cv2.putText(canvas, "height: {:.2f}".format(person_height), topL4, 
+    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
 
 
 cv2.imshow("Contours", canvas)

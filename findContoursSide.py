@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
 import os
-import math
 
 dirname = os.path.dirname(__file__)
 
@@ -77,7 +76,7 @@ contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_N
 cnt = contours[-1]
 
 # define main contour approx. and hull
-# perimeter = cv2.arcLength(cnt, True)
+# perim = cv2.arcLength(cnt, True)
 epsilon = 0.01*cv2.arcLength(cnt, True)
 approx = cv2.approxPolyDP(cnt, epsilon, True)
 
@@ -111,17 +110,23 @@ def get_Xpts(contour, Ypoint):
     lst.sort()
     return lst
 
-def show2points(lst):
+def get2points(lst):
     first, last = lst[0], lst[-1]
     cv2.circle(canvas, (first[0], first[1]), 4, (255,0,0), 2, cv2.LINE_AA)
     cv2.circle(canvas, (last[0], last[1]), 4, (255,0,0), 2, cv2.LINE_AA)
 
+    first, last = [first[0], first[1]] , [last[0], last[1]]
+    return first, last
 
-def showNeckpoints(LNeckPts, RNeckPts):
+
+def getNeckpoints(LNeckPts, RNeckPts):
     l1 = LNeckPts[0]
     r2 = RNeckPts[-1]
     cv2.circle(canvas, (l1[0], l1[1]), 4, (255,0,0), 2, cv2.LINE_AA)
     cv2.circle(canvas, (r2[0], r2[1]), 4, (255,0,0), 2, cv2.LINE_AA)
+
+    l1, r2 = [l1[0], l1[1]] , [r2[0], r2[1]]
+    return l1, r2
 
 
 LneckPts = get_Xpts(cnt, LneckY)
@@ -130,10 +135,44 @@ chestPts = get_Xpts(cnt, chestY)
 waistPts = get_Xpts(cnt, waistY)
 hipPts = get_Xpts(cnt, hipY)
 
-showNeckpoints(LneckPts, RneckPts)
-show2points(chestPts)
-show2points(waistPts)
-show2points(hipPts)
+SneckPt1, SneckPt2 = getNeckpoints(LneckPts, RneckPts)
+SchestPt1, SchestPt2 = get2points(chestPts)
+SwaistPt1, SwaistPt2 = get2points(waistPts)
+ShipPt1, ShipPt2 = get2points(hipPts)
+
+
+
+### CALCULATE SIZES ###
+def calculate_Distance(pt1, pt2):
+    '''makes numpy [x y] arrays from [x,y] lists to calc dist'''
+    a = np.array(pt1) # p1
+    b = np.array(pt2) # p2
+
+    dist = np.linalg.norm(a - b)
+
+    return dist
+
+
+### SHOW SIDE RESULTS ###
+distNeck = calculate_Distance(SneckPt1, SneckPt2)
+distChest = calculate_Distance(SchestPt1, SchestPt2)
+distWaist = calculate_Distance(SwaistPt1, SwaistPt2)
+distHip = calculate_Distance(ShipPt1, ShipPt2)
+
+
+topL1, topL2, topL3, topL4 = (0,15), (0,30), (0,45), (0,60)
+cv2.putText(canvas, "neck: {:.3f}".format(distNeck), topL1, 
+    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+cv2.putText(canvas, "chest: {:.3f}".format(distNeck), topL2, 
+    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+cv2.putText(canvas, "waist: {:.3f}".format(distNeck), topL3, 
+    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+cv2.putText(canvas, "hip: {:.3f}".format(distNeck), topL4, 
+    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
 
 cv2.imshow("Contours", canvas)
 cv2.imwrite(os.path.join(dirname, 'filtered_images/result_sidePt2.jpg'), canvas)

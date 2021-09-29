@@ -1,4 +1,3 @@
-import math
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -9,13 +8,6 @@ mp_pose = mp.solutions.pose
 dirname = os.path.dirname(__file__)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-
-
-def calculate_Perimeter(profundidad, ancho):
-    a, b = profundidad, ancho
-
-    perimeter = math.pi * ( 3*(a + b) - math.sqrt( (3*a + b) * (a + 3*b) ))
-    return perimeter
 
 
 def image_resize(image, width = None, height = None, inter = cv2.INTER_AREA):
