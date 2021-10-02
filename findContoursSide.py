@@ -73,7 +73,19 @@ _, thresh = cv2.threshold(img2gray, 250, 255, cv2.THRESH_BINARY_INV)
 contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
 # find the main contour (2nd biggest area)
+def findMainContour(contours):
+    areas = []
+    for cont in contours:
+        areas.append(cv2.contourArea(cont))
+
+    n= len(areas)
+    areas.sort()
+    return contours[areas.index(areas[n-1])]
+
 cnt = contours[-1]
+if len(contours) != 1:
+    cnt = findMainContour(contours)
+
 
 # define main contour approx. and hull
 # perim = cv2.arcLength(cnt, True)
@@ -84,8 +96,12 @@ hull = cv2.convexHull(cnt)
 
 # canvas = cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB)
 
-# draw all points
+# draw all points in cnt
 cv2.drawContours(canvas, cnt, -1, (0, 255, 0), 2)
+
+# draw all the cnt in contours
+# for count, cnt in enumerate(contours):
+#     cv2.drawContours(canvas, cnt, -1, (0, 255, 0), 2)
 
 # draw approx, only some points using approxpolyDP
 # cv2.drawContours(canvas, [approx], -1, (0, 0, 255), 2)
@@ -175,7 +191,7 @@ cv2.putText(canvas, "hip: {:.3f}".format(distNeck), topL4,
 
 
 cv2.imshow("Contours", canvas)
-cv2.imwrite(os.path.join(dirname, 'filtered_images/result_sidePt2.jpg'), canvas)
+# cv2.imwrite(os.path.join(dirname, 'filtered_images/result_sidePt2.jpg'), canvas)
 
 if cv2.waitKey(0) & 0xFF == ord('q'): 
     cv2.destroyAllWindows()

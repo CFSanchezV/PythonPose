@@ -99,7 +99,7 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
     l_heel = [landmarks[mp_pose.PoseLandmark.LEFT_HEEL.value].x,landmarks[mp_pose.PoseLandmark.LEFT_HEEL.value].y]
     r_heel = [landmarks[mp_pose.PoseLandmark.RIGHT_HEEL.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_HEEL.value].y]
 
-    # Calculate sizes
+    # Calculate leg/arm sizes
     l_arm = calculate_Dist(l_shoulder, l_elbow, l_wrist, w, h)
     r_arm = calculate_Dist(r_shoulder, r_elbow, r_wrist, w, h)
 

@@ -1,4 +1,4 @@
-from torchvision import models
+import torchvision.models.segmentation as seg_models
 from PIL import Image
 import torch
 import numpy as np
@@ -36,6 +36,13 @@ def write_image(path, img):
 
 # Labels + helper function
 def decode_segmap(image, source, nc=21):
+    '''
+    label_colors = np.array([(0, 0, 0),
+    (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0),
+    (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0),
+    (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (192, 128, 128),
+    (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0)])
+    '''
     # 0=background
     # 1=aeroplane, 2=bicycle, 3=bird, 4=boat, 5=bottle
     # 6=bus, 7=car, 8=cat, 9=chair, 10=cow
@@ -43,20 +50,22 @@ def decode_segmap(image, source, nc=21):
     # 16=potted plant, 17=sheep, 18=sofa, 19=train, 20=tv/monitor   
 
     label_colors = np.array([(0, 0, 0),
-    (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0),
-    (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0),
-    (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (192, 128, 128),
-    (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0)])
+        (128, 0, 0), (0, 128, 0), (128, 128, 0), (0, 0, 128), (128, 0, 128),
+        (0, 128, 128), (128, 128, 128), (64, 0, 0), (192, 0, 0), (64, 128, 0),
+        (192, 128, 0), (64, 0, 128), (192, 0, 128), (64, 128, 128), (192, 128, 128),
+        (0, 64, 0), (128, 64, 0), (0, 192, 0), (128, 192, 0), (0, 64, 128)])
 
     r = np.zeros_like(image).astype(np.uint8)
     g = np.zeros_like(image).astype(np.uint8)
     b = np.zeros_like(image).astype(np.uint8)
 
+    # label 15 = person
     for l in range(0, nc):
-        idx = image == l
-        r[idx] = label_colors[l, 0]
-        g[idx] = label_colors[l, 1]
-        b[idx] = label_colors[l, 2]
+        if l == 15:
+            idx = image == l
+            r[idx] = label_colors[l, 0]
+            g[idx] = label_colors[l, 1]
+            b[idx] = label_colors[l, 2]
 
     rgb = np.stack([r, g, b], axis=2)
 
@@ -66,7 +75,6 @@ def decode_segmap(image, source, nc=21):
     # Change the color of foreground image to RGB
     # and resize image to match shape of R-band in RGB output map
     foreground = cv2.cvtColor(foreground, cv2.COLOR_BGR2RGB)
-    store_shape = image.shape # (height, width, #colors=3)
     foreground = cv2.resize(foreground, (r.shape[1], r.shape[0]))
 
     # Create a background array to hold white pixels
@@ -124,8 +132,8 @@ def segment(net, path, dev='cpu'):
     return rgb
 
 
-# dlab = models.segmentation.deeplabv3_resnet101(pretrained=True).eval()
-fcnn = models.segmentation.fcn_resnet101(pretrained=True).eval()
+# dlab = seg_models.deeplabv3_resnet101(pretrained=True).eval()
+fcnn = seg_models.fcn_resnet101(pretrained=True).eval()
 
 # segment(dlab, os.path.join(dirname, 'images/front1.jpg'), dev='cpu')
 

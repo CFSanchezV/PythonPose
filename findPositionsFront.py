@@ -1,12 +1,10 @@
 import cv2
-import mediapipe as mp
 import numpy as np
 import os
-mp_drawing = mp.solutions.drawing_utils
-mp_pose = mp.solutions.pose
+from mediapipe.python.solutions import pose as mp_pose
+from mediapipe.python.solutions import drawing_utils as mp_drawing
 
 dirname = os.path.dirname(__file__)
-WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
 
@@ -162,6 +160,36 @@ def find_HipY(a, w, h, img):
     return a2[1]
 
 
+def calculate_Dist(a, b, c, w, h, d=None):
+    a = np.array(a) # First
+    b = np.array(b) # Mid
+    c = np.array(c) # End
+
+    dist = None
+
+    if d is None:
+        a2 = np.multiply(a, [w, h]).astype(int)
+        b2 = np.multiply(b, [w, h]).astype(int)
+        c2 = np.multiply(c, [w, h]).astype(int)
+        
+        dist1 = np.linalg.norm(a2 - b2)
+        dist2 = np.linalg.norm(b2 - c2)
+        dist = abs(dist1) + abs(dist2)
+    else:
+        d = np.array(d)
+        a2 = np.multiply(a, [w, h]).astype(int)
+        b2 = np.multiply(b, [w, h]).astype(int)
+        c2 = np.multiply(c, [w, h]).astype(int)
+        d2 = np.multiply(c, [w, h]).astype(int)
+
+        dist1 = np.linalg.norm(a2 - b2)
+        dist2 = np.linalg.norm(b2 - c2)
+        dist3 = np.linalg.norm(c2 - d2)
+        dist = abs(dist1) + abs(dist2)+ abs(dist3)
+
+    return dist
+
+
 landmarks = None
 with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
     
@@ -209,7 +237,14 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
     hipY = find_HipY(l_hip, w, h, annotated_front)
     footY = find_FootY(l_heel, w, h, annotated_front)
 
-    # Visualize y_positions, additional points
+    # Calculate leg/arm sizes
+    l_arm = calculate_Dist(l_shoulder, l_elbow, l_wrist, w, h)
+    r_arm = calculate_Dist(r_shoulder, r_elbow, r_wrist, w, h)
+
+    l_leg = calculate_Dist(l_hip, l_knee, l_ankle, w, h, d=l_heel)
+    r_leg = calculate_Dist(r_hip, r_knee, r_ankle, w, h, d=r_heel)
+
+    # Visualize y_positions, and additional points
     cv2.putText(annotated_front, "neck(_,y): {:.3f}".format(neckY), topL1, 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
     
@@ -223,6 +258,24 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
 
     cv2.putText(annotated_front, "foot(_,y): {:.3f}".format(footY), topL5, 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
+
+
+    # Visualize leg/arm sizes
+    cv2.putText(annotated_front, "{:.3f}".format(l_arm), 
+                    tuple(np.multiply(l_elbow, [w, h]).astype(int)), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
+
+    cv2.putText(annotated_front, "{:.3f}".format(r_arm), 
+                    tuple(np.multiply(r_elbow, [w, h]).astype(int)), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
+
+    cv2.putText(annotated_front, "{:.3f}".format(l_leg), 
+                    tuple(np.multiply(l_knee, [w, h]).astype(int)), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
+
+    cv2.putText(annotated_front, "{:.3f}".format(r_leg), 
+                    tuple(np.multiply(r_knee, [w, h]).astype(int)), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
  
     
