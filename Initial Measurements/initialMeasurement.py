@@ -61,7 +61,7 @@ BLACK = (0, 0, 0)
 landmarks = None
 # Mediapipe instance
 with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
-    image = cv2.imread(os.path.join(dirname, 'filtered_images/result_front.jpg'))
+    image = cv2.imread(os.path.join(dirname, '../filtered_images/result_front.jpg'))
     if image is None:
         print("img not found!!!")
         quit()

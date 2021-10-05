@@ -107,7 +107,6 @@ def find_HipY(a, w, h, img):
     return a2[1]
 
 
-landmarks = None
 with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
     
     ### SIDE ###

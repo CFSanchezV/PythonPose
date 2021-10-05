@@ -29,7 +29,6 @@ img_in = cv2.imread(os.path.join(dirname, "filtered_images/result_side.jpg"))
 img_in = cv2.cvtColor(img_in, cv2.COLOR_BGR2GRAY)
 
 img_in = image_resize(img_in, height=730)
-h, w  = img_in.shape
 
 # Show B&W image
 # cv2.imshow("Input img", img_in)
@@ -70,7 +69,7 @@ img2gray = cv2.filter2D(img2gray, -1, kernel)
 
 #extract contours from thresholded image
 _, thresh = cv2.threshold(img2gray, 250, 255, cv2.THRESH_BINARY_INV)
-contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
 # find the main contour (2nd biggest area)
 def findMainContour(contours):

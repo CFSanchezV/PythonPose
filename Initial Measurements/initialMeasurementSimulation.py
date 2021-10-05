@@ -7,7 +7,7 @@ mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
 dirname = os.path.dirname(__file__)
-picpath = os.path.join(dirname, 'picturesTaken')
+picpath = os.path.join(dirname, '../picturesTaken')
 
 '''
 img_name = "sample_myinput.png"

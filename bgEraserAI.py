@@ -100,9 +100,6 @@ def decode_segmap(image, source, nc=21):
     # Multiply the background with ( 1 - alpha )
     background = cv2.multiply(1.0 - alpha, background)
 
-    # foreground = cv2.resize(foreground, (store_shape[1], store_shape[0]))
-    # background = cv2.resize(background, (store_shape[1], store_shape[0]))
-
     # Add the masked foreground and background
     outImage = cv2.add(foreground, background)
 
@@ -128,7 +125,7 @@ def segment(net, path, dev='cpu'):
 
     # Resize back to orig
     w, h = img.size[:]
-    rgb = image_resize(rgb, width=w, height=h)
+    rgb = image_resize(rgb, width=w, height=h, inter=cv2.INTER_LINEAR)
     return rgb
 
 
@@ -137,10 +134,10 @@ fcnn = seg_models.fcn_resnet101(pretrained=True).eval()
 
 # segment(dlab, os.path.join(dirname, 'images/front1.jpg'), dev='cpu')
 
-output_img = segment(fcnn, os.path.join(dirname, 'images/side1.jpg'), dev='cpu')
+output_img = segment(fcnn, os.path.join(dirname, 'images/front1.jpg'), dev='cpu')
 
 cv2.imshow('Sin fondo', output_img)
-write_image(os.path.join(dirname, 'filtered_images/result_side.jpg'), output_img)
+write_image(os.path.join(dirname, 'filtered_images/result_front.jpg'), output_img)
 
 if cv2.waitKey(0) & 0xFF == ord('q'):
     cv2.destroyAllWindows()

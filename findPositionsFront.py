@@ -190,7 +190,6 @@ def calculate_Dist(a, b, c, w, h, d=None):
     return dist
 
 
-landmarks = None
 with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
     
     ### FRONT ###
@@ -245,19 +244,19 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
     r_leg = calculate_Dist(r_hip, r_knee, r_ankle, w, h, d=r_heel)
 
     # Visualize y_positions, and additional points
-    cv2.putText(annotated_front, "neck(_,y): {:.3f}".format(neckY), topL1, 
+    cv2.putText(annotated_front, "neck(_,y): {}".format(neckY), topL1, 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
     
     cv2.putText(annotated_front, "chest front: {:.3f}".format(chest_dist_front), topL2, 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
 
-    cv2.putText(annotated_front, "waist(left, right): {:.3f}, {:.3f}".format(LwaistY, RwaistY), topL3, 
+    cv2.putText(annotated_front, "waist(left, right): {}, {}".format(LwaistY, RwaistY), topL3, 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
 
-    cv2.putText(annotated_front, "hip(_,y): {:.3f}".format(hipY), topL4, 
+    cv2.putText(annotated_front, "hip(_,y): {}".format(hipY), topL4, 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
 
-    cv2.putText(annotated_front, "foot(_,y): {:.3f}".format(footY), topL5, 
+    cv2.putText(annotated_front, "foot(_,y): {}".format(footY), topL5, 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1, cv2.LINE_AA)
 
 
@@ -282,8 +281,9 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
     mp_drawing.draw_landmarks(annotated_front, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
                             mp_drawing.DrawingSpec(color=(245,117,66), thickness=2, circle_radius=2), 
                             mp_drawing.DrawingSpec(color=(245,66,230), thickness=2, circle_radius=2) )
-                                
-    cv2.imshow('Imagen anotada', annotated_front)
+
+
+cv2.imshow('Imagen anotada', annotated_front)
     
-    if cv2.waitKey(0) & 0xFF == ord('q'): 
-        cv2.destroyAllWindows()
+if cv2.waitKey(0) & 0xFF == ord('q'): 
+    cv2.destroyAllWindows()

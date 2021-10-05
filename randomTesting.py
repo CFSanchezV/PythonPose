@@ -43,17 +43,17 @@ def calculate_Waist(ls, rs, lh, rh,  w, h):
 
 
 
-w, h = 600, 400
-ls= [3,3]
-rs= [13,3]
-lh= [6,11]
-rh= [9,11]
+# w, h = 600, 400
+# ls= [3,3]
+# rs= [13,3]
+# lh= [6,11]
+# rh= [9,11]
 
-# y pos must be p2.y - p1.y
-# xypos = calculate_Waist(ls, rs, lh, rh, w, h)
+# # y pos must be p2.y - p1.y
+# # xypos = calculate_Waist(ls, rs, lh, rh, w, h)
 
-x = np.ones((5, 5), np.float32)/1
-print(x)
+# x = np.ones((5, 5), np.float32)/1
+# print(x)
 
 
 
@@ -77,3 +77,19 @@ r_ankle = [landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].x,landmarks[mp_pose
 l_heel = [landmarks[mp_pose.PoseLandmark.LEFT_HEEL.value].x,landmarks[mp_pose.PoseLandmark.LEFT_HEEL.value].y]
 r_heel = [landmarks[mp_pose.PoseLandmark.RIGHT_HEEL.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_HEEL.value].y]
 '''
+
+
+class PositionsSide():
+
+    def __init__(self, *args):
+        print(len(args))
+        if len(args) == 4:
+            self.LneckY = args[0]
+            self.RneckY = args[1]
+            self.chestY = args[2]
+        else:
+            print("mal")
+
+
+shap = PositionsSide (2, 34, 5, 76)
+print(shap.RneckY)

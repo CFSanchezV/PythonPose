@@ -29,7 +29,7 @@ img_in = cv2.imread(os.path.join(dirname, "filtered_images/result_front.jpg"))
 img_in = cv2.cvtColor(img_in, cv2.COLOR_BGR2GRAY)
 
 img_in = image_resize(img_in, height=730)
-h, w  = img_in.shape
+# h, w  = img_in.shape
 
 # Show B&W image
 # cv2.imshow("Input img", img_in)
@@ -70,7 +70,7 @@ img2gray = cv2.filter2D(img2gray, -1, kernel)
 
 #extract contours from thresholded image
 _, thresh = cv2.threshold(img2gray, 250, 255, cv2.THRESH_BINARY_INV)
-contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
 # find the main contour (2nd biggest area)
 def findMainContour(contours):
@@ -90,7 +90,6 @@ if len(contours) != 1:
 # perim = cv2.arcLength(cnt, True)
 epsilon = 0.01*cv2.arcLength(cnt, True)
 approx = cv2.approxPolyDP(cnt, epsilon, True)
-
 hull = cv2.convexHull(cnt)
 
 # canvas = cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB)
@@ -189,7 +188,7 @@ def calculate_Height(contour):
     return dist
 
 
-person_height = int(calculate_Height(cnt))
+person_height = calculate_Height(cnt)
 
 
 ### misc calcs ###
@@ -209,7 +208,7 @@ FhipPt1, FhipPt2 = get2Points(hipPts)
 
 ### CALCULATE SIZES ###
 def calculate_Distance(pt1, pt2):
-    '''makes numpy [x y] arrays from [x,y] lists to calc dist'''
+    '''makes numpy [x y] array from an [x,y] list to calc dist'''
     a = np.array(pt1) # p1
     b = np.array(pt2) # p2
 
@@ -222,7 +221,6 @@ def calculate_Distance(pt1, pt2):
 distNeck = calculate_Distance(FneckPt1, FneckPt2)
 distWaist = calculate_Distance(FwaistPt1, FwaistPt2)
 distHip = calculate_Distance(FhipPt1, FhipPt2)
-
 
 topL1, topL2, topL3, topL4 = (0,15), (0,30), (0,45), (0,60)
 cv2.putText(canvas, "neck: {:.2f}".format(distNeck), topL1, 
