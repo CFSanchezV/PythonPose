@@ -159,7 +159,7 @@ ShipPt1, ShipPt2 = get2points(hipPts)
 
 ### CALCULATE SIZES ###
 def calculate_Distance(pt1, pt2):
-    '''makes numpy [x y] arrays from [x,y] lists to calc dist'''
+    '''makes numpy [x y] array from an [x,y] list to calc dist'''
     a = np.array(pt1) # p1
     b = np.array(pt2) # p2
 

@@ -7,7 +7,6 @@ import cv2
 import os
 import torchvision.transforms as T
 from mediapipe.python.solutions import pose as mp_pose
-from mediapipe.python.solutions import drawing_utils as mp_drawing
 
 dirname = os.path.dirname(__file__)
 
@@ -285,6 +284,14 @@ class MUtils:
 
         return dist
 
+    @staticmethod
+    def getNeckpoints(LNeckPts, RNeckPts):
+        l1 = LNeckPts[0]
+        r2 = RNeckPts[-1]
+
+        l1, r2 = [l1[0], l1[1]] , [r2[0], r2[1]]
+        return l1, r2
+
 
 class BackgroundAI():
     def __init__(self, pretrained=True, device='cuda'):
@@ -425,13 +432,8 @@ class IMGSProcessor():
         # self.positionsSide = PositionsSide(None, None, None, None, None)
         self.positionsFront = None
         self.positionsSide = None
-        pass
-        # process landmarks
-        # calculate Ys
-        # send Ys to contours
-        # get contours
-        # calculate 2D measurements from contours
-        # calculate perimeters
+        self.positionsFront()
+        self.positionsSide()
 
     def find_positions_front(self):
         with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_tracking_confidence=0.5) as poser:
@@ -513,7 +515,7 @@ class IMGSProcessor():
         
         img_floodfill = img_thres.copy()
         
-        # Flood filling. Size needs to be 2 pixels than the image.
+        # Flood filling. Size needs to be 2 pixels bigger than the image.
         h, w = img_thres.shape[:2]
         mask = np.zeros((h+2, w+2), np.uint8)
 
@@ -529,7 +531,6 @@ class IMGSProcessor():
 
         ######## After countour processed image #########
 
-        # get a blank canvas for drawing contour on and convert img to grayscale
         img2gray = img_out.copy()
 
         ## blurring with kernel 25 ##
@@ -550,25 +551,80 @@ class IMGSProcessor():
         LwaistPts = MUtils.get_Xpts(cnt, self.positionsFront.LwaistY)
         RwaistPts = MUtils.get_Xpts(cnt, self.positionsFront.RwaistY)
 
-        # INTERSECTION POINTS | F:front, Pt1:leftmost (x,y) point, Pt1:rightmost (x,y) point
+        # INTERSECTION POINTS | F:front, Pt1:leftmost (x,y) point, Pt2:rightmost (x,y) point
         FneckPt1, FneckPt2 = MUtils.get2Points(neckPts)
         FwaistPt1, FwaistPt2 = MUtils.getWaistPoints(LwaistPts, RwaistPts)
         FhipPt1, FhipPt2 = MUtils.get2Points(hipPts)
 
-        ### results of type "numpy.float64", get float val by "numpy.float64.item()" ###
+        ### RESULTS of type "numpy.float64", get float val by "numpy.float64.item()" ###
         distNeck = MUtils.calculate_Distance(FneckPt1, FneckPt2)
+        distChest = self.positionsFront.chest_dist_front
         distWaist = MUtils.calculate_Distance(FwaistPt1, FwaistPt2)
         distHip = MUtils.calculate_Distance(FhipPt1, FhipPt2)
-        dist_Chest = self.positionsFront.chest_dist_front
         person_height = MUtils.calculate_Height(cnt)
 
-        return MeasurementsFront(distNeck, distWaist, distHip, dist_Chest, person_height)
-
+        return MeasurementsFront(distNeck, distChest, distWaist, distHip, person_height)
 
     def find_contours_side(self):
-        pass
+        img_in = self.sideIMG
+        img_in = cv2.cvtColor(img_in, cv2.COLOR_BGR2GRAY)
+        
+        # Threshold. Set values equal to or above 220 to 0. Set values below 220 to 255.
+        _, img_thres = cv2.threshold(img_in, 245, 255, cv2.THRESH_BINARY_INV)
+        
+        # Copy the thresholded image.
+        img_floodfill = img_thres.copy()
+        
+        # Flood filling. Size needs to be 2 pixels bigger than the image.
+        h, w = img_thres.shape[:2]
+        mask = np.zeros((h+2, w+2), np.uint8)
 
+        # Floodfill from point (0, 0)
+        cv2.floodFill(img_floodfill, mask, (0,0), 255)
 
+        # Invert floodfilled image
+        im_floodfill_inv = cv2.bitwise_not(img_floodfill)
+
+        # Combine the two images to get the foreground.
+        img_out = img_thres | im_floodfill_inv
+        # im_out is of shape (w, h, _)
+
+        ######## After countour processed image #########
+
+        img2gray = img_out.copy()
+
+        ## blurring with kernel 25 ##
+        kernel = np.ones((5, 5), np.float32)/25
+        img2gray = cv2.filter2D(img2gray, -1, kernel)
+
+        #extract contours from thresholded image
+        _, thresh = cv2.threshold(img2gray, 250, 255, cv2.THRESH_BINARY_INV)
+        contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+
+        ### GET SIZES, return sizes originally written in canvas ###
+        cnt = contours[-1]
+        if len(contours) != 1:
+            cnt = MUtils.findMainContour(contours)
+
+        LneckPts = MUtils.get_Xpts(cnt, self.positionsSide.LneckY)
+        RneckPts = MUtils.get_Xpts(cnt, self.positionsSide.RneckY)
+        chestPts = MUtils.get_Xpts(cnt, self.positionsSide.chestY)
+        waistPts = MUtils.get_Xpts(cnt, self.positionsSide.waistY)
+        hipPts = MUtils.get_Xpts(cnt, self.positionsSide.hipY)
+
+        # INTERSECTION POINTS | S:side, Pt1:leftmost (x,y) point, Pt2:rightmost (x,y) point
+        SneckPt1, SneckPt2 = MUtils.getNeckpoints(LneckPts, RneckPts)
+        SchestPt1, SchestPt2 = MUtils.get2points(chestPts)
+        SwaistPt1, SwaistPt2 = MUtils.get2points(waistPts)
+        ShipPt1, ShipPt2 = MUtils.get2points(hipPts)
+
+        ### RESULTS of type "numpy.float64", get float val by "numpy.float64.item()" ###
+        distNeck = MUtils.calculate_Distance(SneckPt1, SneckPt2)
+        distChest = MUtils.calculate_Distance(SchestPt1, SchestPt2)
+        distWaist = MUtils.calculate_Distance(SwaistPt1, SwaistPt2)
+        distHip = MUtils.calculate_Distance(ShipPt1, ShipPt2)
+
+        return MeasurementsSide(distNeck, distChest, distWaist, distHip)
 
 
 class AllMeasurements():
@@ -614,12 +670,21 @@ imgFront = bgAI.segment(os.path.join(dirname, 'images/front1.jpg'))
 imgSide = bgAI.segment(os.path.join(dirname, 'images/side1.jpg'))
 
 processor = IMGSProcessor(imgFront, imgSide)
-processor.positionsFront()
-processor.positionsSide()
 
 frontMeasure = processor.find_contours_front()
 sideMeasure = processor.find_contours_side()
 measurements = AllMeasurements(frontMeasure, sideMeasure)
+
+print(vars(measurements.MFront))
+print(vars(measurements.MSide))
+print(measurements.neck_perimeter)
+print(measurements.chest_perimeter)
+print(measurements.waist_perimeter)
+print(measurements.hip_perimeter)
+del processor
+
+if processor == None:
+    print("perfect")
 
 # MUtils.write_image(os.path.join(dirname, 'output/result_testing_front.jpg'), imgFront)
 # MUtils.write_image(os.path.join(dirname, 'output/result_testing_side.jpg'), imgSide)
