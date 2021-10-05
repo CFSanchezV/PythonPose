@@ -113,6 +113,8 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
     img_side = cv2.imread(os.path.join(dirname, 'filtered_images/result_side.jpg'))
     img_side = image_resize(img_side, height=730)
     h, w, _  = img_side.shape
+    print("S Pos height:", h)
+    print("S Pos width:", w)
 
     # Recolor image to RGB
     img_side = cv2.cvtColor(img_side, cv2.COLOR_BGR2RGB)

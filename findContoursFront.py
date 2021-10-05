@@ -44,6 +44,8 @@ img_floodfill = img_thres.copy()
 # Notice the size needs to be 2 pixels than the image.
 h, w = img_thres.shape[:2]
 mask = np.zeros((h+2, w+2), np.uint8)
+print("F Con height:", h)
+print("F Con width:", w)
 
 # Floodfill from point (0, 0)
 cv2.floodFill(img_floodfill, mask, (0,0), 255)
@@ -108,6 +110,7 @@ neckY = 177
 LwaistY, RwaistY = 306, 301
 hipY = 396
 footY = 647
+dist_chest_front = 119.340
 
 def get_Xpts(contour, Ypoint):
     xs = []
@@ -222,17 +225,20 @@ distNeck = calculate_Distance(FneckPt1, FneckPt2)
 distWaist = calculate_Distance(FwaistPt1, FwaistPt2)
 distHip = calculate_Distance(FhipPt1, FhipPt2)
 
-topL1, topL2, topL3, topL4 = (0,15), (0,30), (0,45), (0,60)
+topL1, topL2, topL3, topL4, topL5 = (0,15), (0,30), (0,45), (0,60), (0,75)
 cv2.putText(canvas, "neck: {:.2f}".format(distNeck), topL1, 
     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
-cv2.putText(canvas, "waist: {:.2f}".format(distWaist), topL2, 
+cv2.putText(canvas, "chest: {:.2f}".format(dist_chest_front), topL2, 
     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
-cv2.putText(canvas, "hip: {:.2f}".format(distHip), topL3, 
+cv2.putText(canvas, "waist: {:.2f}".format(distWaist), topL3, 
     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
-cv2.putText(canvas, "height: {:.2f}".format(person_height), topL4, 
+cv2.putText(canvas, "hip: {:.2f}".format(distHip), topL4, 
+    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+cv2.putText(canvas, "height: {:.2f}".format(person_height), topL5, 
     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
 

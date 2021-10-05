@@ -196,6 +196,8 @@ with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_trac
     img_front = cv2.imread(os.path.join(dirname, 'filtered_images/result_front.jpg'))
     img_front = image_resize(img_front, height=730)
     h, w, _  = img_front.shape
+    print("F Pos height:", h)
+    print("F Pos width:", w)
     
     # Recolor image to RGB
     img_front = cv2.cvtColor(img_front, cv2.COLOR_BGR2RGB)

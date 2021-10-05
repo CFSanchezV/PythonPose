@@ -43,6 +43,8 @@ img_floodfill = img_thres.copy()
 # Notice the size needs to be 2 pixels than the image.
 h, w = img_thres.shape[:2]
 mask = np.zeros((h+2, w+2), np.uint8)
+print("S Con height:", h)
+print("S Con width:", w)
 
 # Floodfill from point (0, 0)
 cv2.floodFill(img_floodfill, mask, (0,0), 255)
@@ -125,7 +127,7 @@ def get_Xpts(contour, Ypoint):
     lst.sort()
     return lst
 
-def get2points(lst):
+def get2Points(lst):
     first, last = lst[0], lst[-1]
     cv2.circle(canvas, (first[0], first[1]), 4, (255,0,0), 2, cv2.LINE_AA)
     cv2.circle(canvas, (last[0], last[1]), 4, (255,0,0), 2, cv2.LINE_AA)
@@ -151,9 +153,9 @@ waistPts = get_Xpts(cnt, waistY)
 hipPts = get_Xpts(cnt, hipY)
 
 SneckPt1, SneckPt2 = getNeckpoints(LneckPts, RneckPts)
-SchestPt1, SchestPt2 = get2points(chestPts)
-SwaistPt1, SwaistPt2 = get2points(waistPts)
-ShipPt1, ShipPt2 = get2points(hipPts)
+SchestPt1, SchestPt2 = get2Points(chestPts)
+SwaistPt1, SwaistPt2 = get2Points(waistPts)
+ShipPt1, ShipPt2 = get2Points(hipPts)
 
 
 
@@ -179,13 +181,13 @@ topL1, topL2, topL3, topL4 = (0,15), (0,30), (0,45), (0,60)
 cv2.putText(canvas, "neck: {:.3f}".format(distNeck), topL1, 
     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
-cv2.putText(canvas, "chest: {:.3f}".format(distNeck), topL2, 
+cv2.putText(canvas, "chest: {:.3f}".format(distChest), topL2, 
     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
-cv2.putText(canvas, "waist: {:.3f}".format(distNeck), topL3, 
+cv2.putText(canvas, "waist: {:.3f}".format(distWaist), topL3, 
     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
-cv2.putText(canvas, "hip: {:.3f}".format(distNeck), topL4, 
+cv2.putText(canvas, "hip: {:.3f}".format(distHip), topL4, 
     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
 

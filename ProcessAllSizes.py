@@ -18,6 +18,11 @@ class MUtils:
         cv2.imwrite(path, img)
 
     @staticmethod
+    def convert_image(img):
+        img = cv2.convertScaleAbs(img, alpha=(255.0))
+        return img
+
+    @staticmethod
     def image_resize(image, width = None, height = None, inter = cv2.INTER_AREA):
         dim = None
         (h, w) = image.shape[:2]
@@ -45,7 +50,7 @@ class MUtils:
         return lh[1]
 
     @staticmethod
-    def find_NeckY(a, b, w, h):
+    def find_FrontNeckY(a, b, w, h):
         a = np.array(a) # nose
         b = np.array(b) # should
 
@@ -58,6 +63,32 @@ class MUtils:
         p[1] = b2[1] - y2
 
         return p[1]
+
+    @staticmethod
+    def find_SideNeckY(a, b, c, w, h):
+        a = np.array(a) # nose
+        b = np.array(b) # l should
+        c = np.array(c) # mouth r
+
+        d_mouth_nose = abs(c[1] - a[1])
+
+        n = np.multiply(a, [w, h]).astype(int)
+        ls = np.multiply(b, [w, h]).astype(int)
+        mr = np.multiply(c, [w, h]).astype(int)
+
+        # l neck point
+        lneck = ls.copy() # l neck
+        ydiff = abs(n[1] - ls[1])
+        y2 = (ydiff)//2
+        lneck[1] = ls[1] - y2
+
+        # r neck point
+        d_mouth_nose = abs(mr[1] - n[1])
+
+        rneck = lneck.copy()
+        rneck[1] += d_mouth_nose
+
+        return lneck[1], rneck[1]
 
     @staticmethod
     def find_ChestY(a, b, w, h):
@@ -117,7 +148,7 @@ class MUtils:
         return dist
 
     @staticmethod
-    def find_WaistY(la, ra, lb, rb,  w, h):
+    def find_Front_WaistY(la, ra, lb, rb,  w, h):
         a = np.array(la) # l should
         b = np.array(ra) # r should
         c = np.array(lb) # l hip
@@ -139,6 +170,28 @@ class MUtils:
         # dist = np.linalg.norm(lw - rw)
 
         return lw[1], rw[1]
+    
+    @staticmethod
+    def find_Side_WaistY(la, ra, lb, rb,  w, h):
+        a = np.array(la) # l should
+        b = np.array(ra) # r should
+        c = np.array(lb) # l hip
+        d = np.array(rb) # r hip
+
+        ls = np.multiply(a, [w, h]).astype(int) # l should
+        rs = np.multiply(b, [w, h]).astype(int) # r should
+        lh = np.multiply(c, [w, h]).astype(int) # l hip
+        rh = np.multiply(d, [w, h]).astype(int) # r hip
+
+        lw = np.copy(ls)
+        lw[1] = (abs(lh[1] - ls[1])) /2 + ls[1]
+
+        rw = np.copy(rs)
+        rw[1] = (abs(rh[1] - rs[1])) /2 + rs[1]
+
+        p = lw.copy() # l waist
+
+        return p[1]
 
     @staticmethod
     def find_HipY(a, w, h):
@@ -260,7 +313,7 @@ class MUtils:
         return [Xpoint, y]
 
     @staticmethod
-    def calculate_Height(contour, imgWidth, footY):
+    def calculate_Height(contour, footY, imgWidth):
         """calculate Height with footY and headY(getTopY)"""
         midX = imgWidth//2
         bottomPoint = [midX, footY]
@@ -382,7 +435,9 @@ class BackgroundAI():
         # Resize back to orig
         w, h = img.size[:]
         rgb = MUtils.image_resize(rgb, width=w, height=h, inter=cv2.INTER_LINEAR)
-        return rgb
+
+        returnedIMG = MUtils.convert_image(rgb)
+        return returnedIMG
 
 
 class PositionsFront():
@@ -416,6 +471,7 @@ class MeasurementsFront():
         self.FhipDist = distHip
         self.Height = person_height
 
+
 class MeasurementsSide():
     def __init__(self, distNeck, dist_Chest, distWaist, distHip):
         self.SneckDist = distNeck
@@ -428,21 +484,21 @@ class IMGSProcessor():
     def __init__(self, frontImg, sideImg):
         self.frontIMG = frontImg
         self.sideIMG = sideImg
-        # self.positionsFront = PositionsFront(None, None, None, None, None, None, None, None, None, None)
-        # self.positionsSide = PositionsSide(None, None, None, None, None)
-        self.positionsFront = None
-        self.positionsSide = None
-        self.positionsFront()
-        self.positionsSide()
+        self.positionsFront =  self.find_positions_front()
+        self.positionsSide = self.find_positions_side()
+
+    def process_measurements(self):
+        return self.find_contours_front(), self.find_contours_side()
 
     def find_positions_front(self):
         with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_tracking_confidence=0.5) as poser:
-            img_front = self.frontIMG
+            img_front = self.frontIMG.copy()
+            # img_front = MUtils.image_resize(img_front, height=730)  # TESTING
             h, w, _  = img_front.shape
             
             img_front = cv2.cvtColor(img_front, cv2.COLOR_BGR2RGB)
             results = poser.process(img_front)
-            # img_front = cv2.cvtColor(img_front, cv2.COLOR_RGB2BGR)
+            img_front = cv2.cvtColor(img_front, cv2.COLOR_RGB2BGR)
             
             # GET LANDMARKS
             landmarks = results.pose_landmarks.landmark
@@ -463,8 +519,8 @@ class IMGSProcessor():
             nose = [landmarks[mp_pose.PoseLandmark.NOSE.value].x,landmarks[mp_pose.PoseLandmark.NOSE.value].y]
 
             # Find positions
-            neckY = MUtils.find_NeckY(nose, l_shoulder, w, h)
-            LwaistY, RwaistY = MUtils.find_WaistY(l_shoulder, r_shoulder, l_hip, r_hip,  w, h)
+            neckY = MUtils.find_FrontNeckY(nose, l_shoulder, w, h)
+            LwaistY, RwaistY = MUtils.find_Front_WaistY(l_shoulder, r_shoulder, l_hip, r_hip,  w, h)
             hipY = MUtils.find_HipY(l_hip, w, h)
             footY = MUtils.find_FootY(l_heel, w, h)
 
@@ -476,17 +532,18 @@ class IMGSProcessor():
             l_leg = MUtils.calculate_limb_dist(l_hip, l_knee, l_ankle, w, h, d=l_heel)
             r_leg = MUtils.calculate_limb_dist(r_hip, r_knee, r_ankle, w, h, d=r_heel)
 
-        self.positionsFront = PositionsFront(neckY, LwaistY, RwaistY, hipY, footY, chest_dist_front, l_arm, r_arm, l_leg, r_leg)
+        return PositionsFront(neckY, LwaistY, RwaistY, hipY, footY, chest_dist_front, l_arm, r_arm, l_leg, r_leg)
 
     def find_positions_side(self):
         with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5, min_tracking_confidence=0.5) as poser:
-            img_side = self.sideIMG
+            img_side = self.sideIMG.copy()
+            # img_side = MUtils.image_resize(img_side, height=730)  # TESTING
             h, w, _  = img_side.shape
 
             # Recolor image to RGB
             img_side = cv2.cvtColor(img_side, cv2.COLOR_BGR2RGB)
             results = poser.process(img_side)
-            # img_side = cv2.cvtColor(img_side, cv2.COLOR_RGB2BGR)
+            img_side = cv2.cvtColor(img_side, cv2.COLOR_RGB2BGR)
             
             # GET LANDMARKS
             landmarks = results.pose_landmarks.landmark
@@ -499,16 +556,17 @@ class IMGSProcessor():
             mouth_r = [landmarks[mp_pose.PoseLandmark.MOUTH_RIGHT.value].x,landmarks[mp_pose.PoseLandmark.MOUTH_RIGHT.value].y]
 
             # Find positions
-            LneckY, RneckY = MUtils.find_NeckY(nose, l_shoulder, mouth_r, w, h)
+            LneckY, RneckY = MUtils.find_SideNeckY(nose, l_shoulder, mouth_r, w, h)
             chestY = MUtils.find_ChestY(l_elbow, l_shoulder, w, h)
-            waistY = MUtils.find_WaistY(l_shoulder, r_shoulder, l_hip, r_hip,  w, h)
+            waistY = MUtils.find_Side_WaistY(l_shoulder, r_shoulder, l_hip, r_hip,  w, h)
             hipY = MUtils.find_HipY(l_hip, w, h)
 
-        self.positionsSide = PositionsSide(LneckY, RneckY, chestY, waistY, hipY)
+        return PositionsSide(LneckY, RneckY, chestY, waistY, hipY)
 
     def find_contours_front(self):
         img_in = self.frontIMG
         img_in = cv2.cvtColor(img_in, cv2.COLOR_BGR2GRAY)
+        # img_in = MUtils.image_resize(img_in, height=730)  # TESTING
         
         # Threshold. Set values equal to or above 220 to 0. Set values below 220 to 255.
         _, img_thres = cv2.threshold(img_in, 245, 255, cv2.THRESH_BINARY_INV)
@@ -553,7 +611,7 @@ class IMGSProcessor():
 
         # INTERSECTION POINTS | F:front, Pt1:leftmost (x,y) point, Pt2:rightmost (x,y) point
         FneckPt1, FneckPt2 = MUtils.get2Points(neckPts)
-        FwaistPt1, FwaistPt2 = MUtils.getWaistPoints(LwaistPts, RwaistPts)
+        FwaistPt1, FwaistPt2 = MUtils.getWaistPoints(LwaistPts, RwaistPts, imgWidth=w)
         FhipPt1, FhipPt2 = MUtils.get2Points(hipPts)
 
         ### RESULTS of type "numpy.float64", get float val by "numpy.float64.item()" ###
@@ -561,18 +619,18 @@ class IMGSProcessor():
         distChest = self.positionsFront.chest_dist_front
         distWaist = MUtils.calculate_Distance(FwaistPt1, FwaistPt2)
         distHip = MUtils.calculate_Distance(FhipPt1, FhipPt2)
-        person_height = MUtils.calculate_Height(cnt)
+        person_height = MUtils.calculate_Height(cnt, self.positionsFront.footY, imgWidth=w)
 
         return MeasurementsFront(distNeck, distChest, distWaist, distHip, person_height)
 
     def find_contours_side(self):
         img_in = self.sideIMG
         img_in = cv2.cvtColor(img_in, cv2.COLOR_BGR2GRAY)
+        # img_in = MUtils.image_resize(img_in, height=730)  # TESTING
         
         # Threshold. Set values equal to or above 220 to 0. Set values below 220 to 255.
         _, img_thres = cv2.threshold(img_in, 245, 255, cv2.THRESH_BINARY_INV)
         
-        # Copy the thresholded image.
         img_floodfill = img_thres.copy()
         
         # Flood filling. Size needs to be 2 pixels bigger than the image.
@@ -614,9 +672,9 @@ class IMGSProcessor():
 
         # INTERSECTION POINTS | S:side, Pt1:leftmost (x,y) point, Pt2:rightmost (x,y) point
         SneckPt1, SneckPt2 = MUtils.getNeckpoints(LneckPts, RneckPts)
-        SchestPt1, SchestPt2 = MUtils.get2points(chestPts)
-        SwaistPt1, SwaistPt2 = MUtils.get2points(waistPts)
-        ShipPt1, ShipPt2 = MUtils.get2points(hipPts)
+        SchestPt1, SchestPt2 = MUtils.get2Points(chestPts)
+        SwaistPt1, SwaistPt2 = MUtils.get2Points(waistPts)
+        ShipPt1, ShipPt2 = MUtils.get2Points(hipPts)
 
         ### RESULTS of type "numpy.float64", get float val by "numpy.float64.item()" ###
         distNeck = MUtils.calculate_Distance(SneckPt1, SneckPt2)
@@ -651,8 +709,8 @@ class AllMeasurements():
         return perimeter
 
     def calc_waist_peri(self):
-        Fwaist = self.MFront.FwaisttDist.item()
-        Swaist = self.MSide.SwaisttDist.item()
+        Fwaist = self.MFront.FwaistDist.item()
+        Swaist = self.MSide.SwaistDist.item()
 
         perimeter = MUtils.calculate_Perimeter(Fwaist, Swaist)
         return perimeter
@@ -665,26 +723,27 @@ class AllMeasurements():
         return perimeter
 
 
+## TESTING CLASSES ##
+
 bgAI = BackgroundAI()
 imgFront = bgAI.segment(os.path.join(dirname, 'images/front1.jpg'))
 imgSide = bgAI.segment(os.path.join(dirname, 'images/side1.jpg'))
 
-processor = IMGSProcessor(imgFront, imgSide)
-
-frontMeasure = processor.find_contours_front()
-sideMeasure = processor.find_contours_side()
+img_processor = IMGSProcessor(imgFront, imgSide)
+frontMeasure, sideMeasure = img_processor.process_measurements()
 measurements = AllMeasurements(frontMeasure, sideMeasure)
 
+del img_processor
+
+## PRINT RESULTS ##
+print("")
+print("Front Measurements:")
 print(vars(measurements.MFront))
+print("Side Measurements:")
 print(vars(measurements.MSide))
-print(measurements.neck_perimeter)
-print(measurements.chest_perimeter)
-print(measurements.waist_perimeter)
-print(measurements.hip_perimeter)
-del processor
 
-if processor == None:
-    print("perfect")
-
-# MUtils.write_image(os.path.join(dirname, 'output/result_testing_front.jpg'), imgFront)
-# MUtils.write_image(os.path.join(dirname, 'output/result_testing_side.jpg'), imgSide)
+measurements_dict = vars(measurements).copy()
+measurements_dict.pop('MFront')
+measurements_dict.pop('MSide')
+print("Additional Measurements:")
+print(measurements_dict)
