@@ -6,7 +6,7 @@ PythonPose is a quick Python project that utilizes OpenCV to extract backgrounds
 ## 🔧 Installation
 1. Clone this repository:
    ```sh
-   git clone https://github.com/yourusername/PythonPose.git
+   git clone https://github.com/CFSanchezV/PythonPose.git
    ```
 2. Navigate into the project directory:
    ```sh
@@ -29,7 +29,7 @@ Replace `path/to/image.jpg` with your actual image file and specify the desired 
 - **bgEraserAI.py** - Main script for background removal.
 - **findContoursFront.py** / **findContoursSide.py** - Finds image contours from different angles.
 - **findPositionsFront.py** / **findPositionsSide.py** - Identifies key positions in the image.
-- **randomTesting.py** - Script for testing different configurations.
+- **testing.py** - Script for testing different configurations.
 - **Initial Measurements/** - Contains scripts for initial measurement calculations.
 
 ## 🛠 Dependencies
